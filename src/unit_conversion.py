@@ -99,7 +99,7 @@ def convert_different_units(value, prop, index):
     elif prop[1]+'_to_'+prop[0] in units_conversion:
         c2 = 1./units_conversion[prop[1]+'_to_'+prop[0]]
     else:
-        raise ValueError('uneccepted property conversion.')
+        raise ValueError('unaccepted property conversion.')
 
     if 'length' in prop and ('energy' in prop or 'frequency' in prop):
         value = 1./value
