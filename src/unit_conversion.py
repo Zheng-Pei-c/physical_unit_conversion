@@ -1,51 +1,53 @@
 import os, sys
 import numpy as np
 
-# three constant values
-#time   = 1 # au
-#length = 1 # au ie bohr
-#energy = 1 # au ie Hartree
-FS   = 41.341374575751 # au
-BOHR = 0.529177249 # AA
-H2EV = 27.21140795 # hartree
-EV2J = 1.602176634*1e-19 # ev to J=C*V
-Mole = 6.022*1e23
-Cal2J = 4.184
-EV2kJM = EV2J*Mole*1e-3
+PI2    = 2.*np.pi
+FS     = 41.341374575751   # fs to atomic unit time
+BOHR   = 0.529177249       # bohr to angstrom AA
+H2EV   = 27.21140795       # hartree to ev
+EV2J   = 1.602176634*1e-19 # ev to J=C*V
+Mole   = 6.022*1e23
+Cal2J  = 4.184             # cal to J
+EV2kJM = EV2J*Mole*1e-3    # ev to kcal/mol
 
-Boltzmann = 1.380649*1e-23 # J/K
-Planck = 6.62607015*1e-34 # Js
-C = 299792458 # speed of light m/s
+C         = 299792458        # speed of light m/s
+Boltzmann = 1.380649*1e-23   # J/K
+Planck    = 6.62607015*1e-34 # J/Hz
+PlanckBar = Planck/PI2       # Js
 
-WN = EV2J/C/Planck*1e-2 # ev to wavenumber cm^-1
-EV2K = EV2J/Boltzmann # ev to temperature K
-
+WN    = EV2J/C/Planck*1e-2    # ev to wavenumber cm^-1
+EV2ns = Planck/EV2J*1e9       # ev to ns ### wikipedia use planckbar!
+EV2nm = EV2ns*C               # ev to ns
+EV2K  = EV2J/Boltzmann        # ev to temperature K
+D2kg  = 1.4924180856045*1e-10 # Dalton to kg
 
 # units of these qualities
 # milli(m), micro(u), nano(n), pico(p), femto(f), atto(a)
 # deci(d), centi(c), angstrom(aa)
 units_long = {
-        'time':   ['day', 'hour', 'minute', 'second', 'millisecond', \
-                   'microsecond', 'nanosecond', 'picosecond', \
-                   'femtosecond', 'atomicunit', 'attosecond'],
-        'length': ['meter', 'decimeter', 'centimeter', 'millimeter', \
-                   'micrometer', 'nanometer', 'angstrom', 'bohr', \
-                   'picometer', 'femtometer', 'attometer'],
-        'energy': ['hartree', 'electronvolt', 'milliev', 'kcal/mol', 'kj/mol'],
-        'frequency': ['terahertz', 'gigahertz', 'megahertz', 'kilohertz', 'hertz', 'cm^-1'],
+        'time':        ['day', 'hour', 'minute', 'second', 'millisecond', \
+                        'microsecond', 'nanosecond', 'picosecond', \
+                        'femtosecond', 'atomicunit', 'attosecond'],
+        'length':      ['meter', 'decimeter', 'centimeter', 'millimeter', \
+                        'micrometer', 'nanometer', 'angstrom', 'bohr', \
+                        'picometer', 'femtometer', 'attometer'],
+        'energy':      ['hartree', 'electronvolt', 'milliev', 'kcal/mol', 'kj/mol'],
+        'frequency':   ['terahertz', 'gigahertz', 'megahertz', 'kilohertz', 'hertz', 'cm^-1'],
         'temperature': ['kelvin'],
+        'mass':        ['kilogram', 'gram', 'dalton'],
         }
 
 units_short = {
-        'time':   ['d', 'h', 'm', 's', 'ms', 'us', 'ns', 'ps', 'fs', 'au', 'as'],
-        'length': ['m', 'dm', 'cm', 'mm', 'um', 'nm', 'aa', 'bohr', 'pm', 'fm', 'am'],
-        'energy': ['h', 'ev', 'mev', 'kcal', 'kj'],
-        'frequency': ['thz', 'ghz', 'mhz', 'khz', 'hz', 'cm-1'],
+        'time':        ['d', 'h', 'm', 's', 'ms', 'us', 'ns', 'ps', 'fs', 'au', 'as'],
+        'length':      ['m', 'dm', 'cm', 'mm', 'um', 'nm', 'aa', 'b', 'pm', 'fm', 'am'],
+        'energy':      ['h', 'ev', 'mev', 'kcal', 'kj'],
+        'frequency':   ['thz', 'ghz', 'mhz', 'khz', 'hz', 'cm-1'],
         'temperature': ['k'],
+        'mass':        ['kg', 'g', 'u'],
         }
 properties = list(units_long.keys())
 # indices of atomic units for converting different properties
-Idx = ['ns', 'nm', 'ev', 'cm-1', 'k']
+Idx = ['ns', 'nm', 'ev', 'cm-1', 'k', 'kg']
 for i, s in enumerate(properties):
     Idx[i] = units_short[s].index(Idx[i])
 #print(Idx)
@@ -56,14 +58,17 @@ units_conversion = {
         'energy':      np.array([H2EV, 1., 1e-3, Cal2J/EV2kJM, 1./EV2kJM]),
         'frequency':   np.array([1e12, 1e9, 1e6, 1e3, 1., C*1e2]),
         'temperature': np.array([1.]),
-        'time_to_length':        C,   # ns to nm
-        'energy_to_frequency':   WN,  # ev to cm-1
-        'energy_to_temperature': EV2K, # ev to K
-        'frequency_to_length':   1e7, # cm-1 to nm
-        'frequency_to_time':     1e7/C,
-        'energy_to_length':      1e7*WN,
-        'energy_to_time':        1e7*WN/C,
-        'frequency_to_temperature': EV2K/WN,
+        'mass':        np.array([1e3, 1., D2kg]),
+        'time_to_length':           C,          # ns to nm
+        'energy_to_time':           EV2ns,      # ev to ns
+        'energy_to_length':         EV2nm,      # ev to nm
+        'energy_to_frequency':      WN,         # ev to cm-1
+        'energy_to_temperature':    EV2K,       # ev to K
+        'energy_to_mass':           EV2J/C**2,  # ev to kg
+        'frequency_to_time':        EV2ns/WN,   # hz to ns
+        'frequency_to_length':      EV2nm/WN,   # hz to nm
+        'frequency_to_temperature': EV2K/WN,    # hz to K
+        'time_to_temperature':      EV2K/EV2ns, # ns to K
         }
 
 
@@ -101,9 +106,11 @@ def convert_different_units(value, prop, index):
     else:
         raise ValueError('unaccepted property conversion.')
 
-    if 'length' in prop and ('energy' in prop or 'frequency' in prop):
+    if ('time' in prop or 'length' in prop) and ('energy' in prop or 'frequency' in prop):
         value = 1./value
+        if prop[1]+'_to_'+prop[0] in units_conversion: c2 = 1./c2
 
+    #print(c[0], c2, c[1])
     return value * c[0] * c2 / c[1]
 
 
