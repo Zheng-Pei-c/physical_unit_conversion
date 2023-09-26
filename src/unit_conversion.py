@@ -47,9 +47,10 @@ units_short = {
         }
 properties = list(units_long.keys())
 # indices of atomic units for converting different properties
-Idx = ['ns', 'nm', 'ev', 'cm-1', 'k', 'kg']
+Idx_name = ['ns', 'nm', 'ev', 'cm-1', 'k', 'kg']
+Idx = [0]*len(Idx_name)
 for i, s in enumerate(properties):
-    Idx[i] = units_short[s].index(Idx[i])
+    Idx[i] = units_short[s].index(Idx_name[i])
 #print(Idx)
 
 units_conversion = {
@@ -122,9 +123,28 @@ def convert_units(value, unit0='au', unit1='fs'):
         return convert_different_units(value, prop, index)
 
 
+def convert_other_property(value, unit0='au'):
+    prop, index = find_properties(unit0, None)
+    prop, index = prop[0], index[0]
+    i = properties.index(prop)
+
+    value1 = np.zeros(len(properties))
+    for j, p in enumerate(properties):
+        k = Idx[j]
+        if j == i:
+            value1[j] = convert_same_units(value, prop, [index, k])
+        elif j != i:
+            value1[j] = convert_different_units(value, [prop, p], [index, k])
+
+        print(value1[j], Idx_name[j], end='  ')
+    print('')
+    return value1
+
+
 if __name__ == '__main__':
     value0 = float(sys.argv[1])
     unit0, unit1 = sys.argv[2].lower(), sys.argv[3].lower()
     value1 = convert_units(value0, unit0, unit1)
     print(str(value0)+' '+unit0+' = '+str(value1)+' '+unit1)
 
+    #convert_other_property(value0, unit0)
