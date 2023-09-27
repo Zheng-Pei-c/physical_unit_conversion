@@ -1,6 +1,12 @@
 import os, sys
 import numpy as np
 
+"""
+websites to check the conversion:
+    https://halas.rice.edu/unit-conversions
+    https://sherwingroup.itst.ucsb.edu/internal/unit-conversion/
+"""
+
 PI2    = 2.*np.pi
 FS     = 41.341374575751   # fs to atomic unit time
 BOHR   = 0.529177249       # bohr to angstrom AA
@@ -13,7 +19,7 @@ EV2kJM = EV2J*Mole*1e-3    # ev to kcal/mol
 C         = 299792458        # speed of light m/s
 Boltzmann = 1.380649*1e-23   # J/K
 Planck    = 6.62607015*1e-34 # J/Hz
-PlanckBar = Planck/PI2       # Js
+#PlanckBar = Planck/PI2       # Js
 
 WN    = EV2J/C/Planck*1e-2    # ev to wavenumber cm^-1
 EV2ns = Planck/EV2J*1e9       # ev to ns ### wikipedia use planckbar!
@@ -32,7 +38,7 @@ units_long = {
                         'micrometer', 'nanometer', 'angstrom', 'bohr', \
                         'picometer', 'femtometer', 'attometer'],
         'energy':      ['hartree', 'electronvolt', 'milliev', 'kcal/mol', 'kj/mol'],
-        'frequency':   ['terahertz', 'gigahertz', 'megahertz', 'kilohertz', 'hertz', 'cm^-1'],
+        'frequency':   ['terahertz', 'cm^-1', 'gigahertz', 'megahertz', 'kilohertz', 'hertz'],
         'temperature': ['kelvin'],
         'mass':        ['kilogram', 'gram', 'dalton'],
         }
@@ -41,7 +47,7 @@ units_short = {
         'time':        ['d', 'h', 'm', 's', 'ms', 'us', 'ns', 'ps', 'fs', 'au', 'as'],
         'length':      ['m', 'dm', 'cm', 'mm', 'um', 'nm', 'aa', 'b', 'pm', 'fm', 'am'],
         'energy':      ['h', 'ev', 'mev', 'kcal', 'kj'],
-        'frequency':   ['thz', 'ghz', 'mhz', 'khz', 'hz', 'cm-1'],
+        'frequency':   ['thz', 'cm-1', 'ghz', 'mhz', 'khz', 'hz'],
         'temperature': ['k'],
         'mass':        ['kg', 'g', 'u'],
         }
@@ -57,7 +63,7 @@ units_conversion = {
         'time':        np.array([8.64*1e12, 3.6*1e11, 6.*1e10, 1e9, 1e6, 1e3, 1., 1e-3, 1e-6, 1e-6/FS, 1e-9]),
         'length':      np.array([1e9, 1e8, 1e7, 1e6, 1e3, 1., .1, BOHR/10, 1e-3, 1e-6, 1e-9]),
         'energy':      np.array([H2EV, 1., 1e-3, Cal2J/EV2kJM, 1./EV2kJM]),
-        'frequency':   np.array([1e12, 1e9, 1e6, 1e3, 1., C*1e2]),
+        'frequency':   np.array([1e12, C*1e2, 1e9, 1e6, 1e3, 1.]),
         'temperature': np.array([1.]),
         'mass':        np.array([1e3, 1., D2kg]),
         'time_to_length':           C,          # ns to nm
@@ -66,9 +72,9 @@ units_conversion = {
         'energy_to_frequency':      WN,         # ev to cm-1
         'energy_to_temperature':    EV2K,       # ev to K
         'energy_to_mass':           EV2J/C**2,  # ev to kg
-        'frequency_to_time':        EV2ns/WN,   # hz to ns
-        'frequency_to_length':      EV2nm/WN,   # hz to nm
-        'frequency_to_temperature': EV2K/WN,    # hz to K
+        'frequency_to_time':        1e7/C,      # cm-1 to ns
+        'frequency_to_length':      1e7,        # cm-1 to nm
+        'frequency_to_temperature': EV2K/WN,    # cm-1 to K
         'time_to_temperature':      EV2K/EV2ns, # ns to K
         }
 
@@ -107,12 +113,17 @@ def convert_different_units(value, prop, index):
     else:
         raise ValueError('unaccepted property conversion.')
 
-    if ('time' in prop or 'length' in prop) and ('energy' in prop or 'frequency' in prop):
-        value = 1./value
-        if prop[1]+'_to_'+prop[0] in units_conversion: c2 = 1./c2
-
     #print(c[0], c2, c[1])
-    return value * c[0] * c2 / c[1]
+    if ('time' in prop or 'length' in prop) and ('energy' in prop or 'frequency' in prop):
+        if 'energy' in prop[0] or 'frequency' in prop[0]:
+            if 'hz' in units_short['frequency'][index[0]] or 'hertz' in units_long['frequency'][index[0]]:
+                return (c2/c[0]/c[1])/value
+            else:
+                return (c[0]*c2/c[1])/value
+        else:
+            return 1./(c[0]*c2*c[1])/value
+    else:
+        return (c[0]*c2/c[1])*value
 
 
 def convert_units(value, unit0='au', unit1='fs'):
