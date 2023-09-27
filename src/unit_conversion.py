@@ -59,6 +59,10 @@ for i, s in enumerate(properties):
     Idx[i] = units_short[s].index(Idx_name[i])
 #print(Idx)
 
+def default_unit_index(prop):
+    return Idx[properties.index(prop)]
+
+
 units_conversion = {
         'time':        np.array([8.64*1e12, 3.6*1e11, 6.*1e10, 1e9, 1e6, 1e3, 1., 1e-3, 1e-6, 1e-6/FS, 1e-9]),
         'length':      np.array([1e9, 1e8, 1e7, 1e6, 1e3, 1., .1, BOHR/10, 1e-3, 1e-6, 1e-9]),
@@ -66,16 +70,11 @@ units_conversion = {
         'frequency':   np.array([1e12, C*1e2, 1e9, 1e6, 1e3, 1.]),
         'temperature': np.array([1.]),
         'mass':        np.array([1e3, 1., D2kg]),
-        'time_to_length':           C,          # ns to nm
         'energy_to_time':           EV2ns,      # ev to ns
         'energy_to_length':         EV2nm,      # ev to nm
         'energy_to_frequency':      WN,         # ev to cm-1
         'energy_to_temperature':    EV2K,       # ev to K
         'energy_to_mass':           EV2J/C**2,  # ev to kg
-        'frequency_to_time':        1e7/C,      # cm-1 to ns
-        'frequency_to_length':      1e7,        # cm-1 to nm
-        'frequency_to_temperature': EV2K/WN,    # cm-1 to K
-        'time_to_temperature':      EV2K/EV2ns, # ns to K
         }
 
 
@@ -99,31 +98,31 @@ def convert_same_units(value, prop, index):
     return value * conv[i] / conv[j]
 
 
-def convert_different_units(value, prop, index):
-    c = [0]*2
-    for k, p in enumerate(prop):
-        conv = units_conversion[p]
-        c[k] = conv[index[k]] / conv[Idx[properties.index(p)]]
+def convert_property_to_energy(value, prop, index):
+    c1 = convert_same_units(value, prop[0], [index[0], default_unit_index(prop[0])])
+    c3 = convert_same_units(1., prop[1], [index[1], default_unit_index(prop[1])])
 
     c2 = 0
-    if prop[0]+'_to_'+prop[1] in units_conversion:
+    if 'energy' in prop[0]:
         c2 = units_conversion[prop[0]+'_to_'+prop[1]]
-    elif prop[1]+'_to_'+prop[0] in units_conversion:
+    elif 'time' in prop or 'length' in prop:
+        c2 = units_conversion[prop[1]+'_to_'+prop[0]]
+    else:
         c2 = 1./units_conversion[prop[1]+'_to_'+prop[0]]
-    else:
-        raise ValueError('unaccepted property conversion.')
 
-    #print(c[0], c2, c[1])
-    if ('time' in prop or 'length' in prop) and ('energy' in prop or 'frequency' in prop):
-        if 'energy' in prop[0] or 'frequency' in prop[0]:
-            if 'hz' in units_short['frequency'][index[0]] or 'hertz' in units_long['frequency'][index[0]]:
-                return (c2/c[0]/c[1])/value
-            else:
-                return (c[0]*c2/c[1])/value
-        else:
-            return 1./(c[0]*c2*c[1])/value
+    if 'time' in prop or 'length' in prop:
+        return c2/c3/c1
     else:
-        return (c[0]*c2/c[1])*value
+        return c1*c2/c3
+
+
+def convert_different_units(value, prop, index):
+    if 'energy' in prop:
+        return convert_property_to_energy(value, prop, index)
+    else:
+        k = default_unit_index('energy')
+        value = convert_property_to_energy(value, [prop[0], 'energy'], [index[0], k])
+        return convert_property_to_energy(value, ['energy', prop[1]], [k, index[1]])
 
 
 def convert_units(value, unit0='au', unit1='fs'):
