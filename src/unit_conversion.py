@@ -79,6 +79,8 @@ units_conversion = {
 
 
 def find_properties(unit0='au', unit1='fs'):
+    unit0, unit1 = unit0.lower(), unit1.lower()
+
     prop, index = [], []
     for u in [unit0, unit1]:
         for s in properties:
@@ -149,6 +151,7 @@ def convert_other_property(value, unit0='au'):
         print(value1[j], Idx_name[j], end='  ')
     print('')
     return value1
+
 
 
 if __name__ == '__main__':
