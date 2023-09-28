@@ -10,29 +10,30 @@ from unit_conversion import convert_units
 
 def plot_wave_energy_frequency():
     # 1nm to 1mm (1e6nm)
-    wave_names = {'EUV':    [1,     100], # nm extreme UV       1
-                  'VUV':    [100,   190], # nm vacuum UV
-                  'DUV':    [190,   280], # nm deep UV          3
-                  'UV_B':   [280,   315], # nm mid UV
-                  'UV_A':   [315,   380], # nm near UV          5 #
-                  'violet': [380,   435], # nm violet           6
-                  'blue':   [435,   500], # nm blue
-                  'cyan':   [500,   520], # nm cyan
-                  'green':  [520,   565], # nm green
-                  'yellow': [565,   590], # nm yellow
-                  'orange': [590,   625], # nm orange
-                  'red':    [625,   780], # nm red             12 #
-                  'NIR_A':  [780,  1400], # nm near infrared I 13
-                  'NIR_B':  [1400, 3000], # nm near infrared II   #
-                  'NIR_C':  [3,    50  ], # um mid infrared    15
-                  'FIR':    [50,   1000], # um far infrared    16
+    wave_names = {#'X-ray':    [0.01,  10],  # nm X-ray # 100 keV--100 eV
+                  'Extrem-UV': [1,     100], # nm extreme UV       1
+                  'Vacuum-UV': [100,   190], # nm vacuum UV
+                  'Deep-UV':   [190,   280], # nm deep UV          3
+                  'Mid-UV':    [280,   315], # nm mid UV
+                  'Near-UV':   [315,   380], # nm near UV          5 #
+                  'violet':    [380,   435], # nm violet           6
+                  'blue':      [435,   500], # nm blue
+                  'cyan':      [500,   520], # nm cyan
+                  'green':     [520,   565], # nm green
+                  'yellow':    [565,   590], # nm yellow
+                  'orange':    [590,   625], # nm orange
+                  'red':       [625,   780], # nm red             12 #
+                  'Near-IR I': [780,  1400], # nm near infrared I 13
+                  'Near-IR II':[1400, 3000], # nm near infrared II   #
+                  'Mid-IR':    [3,    50  ], # um mid infrared    15
+                  'Far-IR':    [50,   1000], # um far infrared    16
                   }
     wavelengths = []
     for key, [v0, v1] in wave_names.items():
         wavelengths.append(np.linspace(v0, v1, (v1-v0)//2))
     #wavelengths = np.hstack(wavelengths)
     wavelengths = [np.hstack(wavelengths[0]), np.hstack(wavelengths[1]),
-                   np.hstack(wavelengths[2:12]), np.hstack(wavelengths[12:13]),
+                   np.hstack(wavelengths[2:12]), np.hstack(wavelengths[12:14]),
                    np.hstack(wavelengths[14]), np.hstack(wavelengths[15]),
                    ]
     #print(wavelengths.shape)
@@ -104,12 +105,21 @@ def plot_wave_energy_frequency():
         ax1.grid(ls='--', alpha=alpha)
 
         if i == 2:
-            #hight = energy[i][0]
             for key, (v0, v1) in list(wave_names.items())[5:12]:
                 width = v1 - v0
                 #ax1.bar(v0, hight, width, color='none', edgecolor=key, align='edge', alpha=.85, hatch='|', zorder=0)
                 ax1.axvspan(v0, v1, color=key, alpha=.8)
-
+        elif i == 3:
+            keys = list(wave_names.keys())[12:14]
+            (xloc0, xloc1), (_, xloc2) = list(wave_names.values())[12:14]
+            print(xloc0, xloc1, xloc2 )
+            ax1.vlines(xloc1, energy[i][-1], energy[i][0], ls='--')
+            ax1.text((xloc0+xloc1)/2, (energy[i][0]+energy[i][-1])/2, keys[0], ha='center')
+            ax1.text((xloc1+xloc2)/2, (energy[i][0]+energy[i][-1])/2, keys[1], ha='center')
+        elif i < 2:
+            ax1.text(np.average(length), (energy[i][0]+energy[i][-1])/2, list(wave_names.keys())[i], ha='center')
+        else:
+            ax1.text(np.average(length), (energy[i][0]+energy[i][-1])/2, list(wave_names.keys())[i+10], ha='center')
 
     plt.tight_layout()
 
