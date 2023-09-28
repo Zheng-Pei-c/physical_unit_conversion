@@ -104,11 +104,11 @@ def plot_wave_energy_frequency():
         ax1.grid(ls='--', alpha=alpha)
 
         if i == 2:
-            hight = energy[i][0]
+            #hight = energy[i][0]
             for key, (v0, v1) in list(wave_names.items())[5:12]:
                 width = v1 - v0
-                ax1.bar(v0, hight, width, color=key, align='edge', alpha=.8)
-                ax1.bar(v0, hight, width, color='none', edgecolor=key, align='edge', alpha=.85, hatch='|', zorder=0)
+                #ax1.bar(v0, hight, width, color='none', edgecolor=key, align='edge', alpha=.85, hatch='|', zorder=0)
+                ax1.axvspan(v0, v1, color=key, alpha=.8)
 
 
     plt.tight_layout()
