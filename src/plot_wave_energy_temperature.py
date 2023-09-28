@@ -74,7 +74,9 @@ def plot_wave_energy_frequency():
         ax3 = ax1.twiny()
 
         ax1.plot(length, energy[i], color='b')
-        ax2.plot(length, temperature[i], color='b') # has save curve as energy, just for yticks
+        alpha = 1 if i==2 else 0
+        # has save curve as energy except 2, just for yticks
+        ax2.plot(length, temperature[i], color='g', alpha=alpha)
 
         unit = '$\mu$m' if 'um' in units['l'][i] else units['l'][i]
         ax1.set_xlabel('Wavelength ('+unit+')')
@@ -82,10 +84,7 @@ def plot_wave_energy_frequency():
         ax2.set_ylabel('Temperature ('+units['T'][i]+')')
 
         if i < 3:
-            if i < 2:
-                ax3.plot(time[i], energy[i], color='b')
-            else:
-                ax3.plot(time[i], energy[i], color='g')
+            ax3.plot(time[i], energy[i], color='b', alpha=0) # have save curve as energy, get yticks
             ax3.set_xlabel('Time ('+units['t'][i]+')')
         else:
             ax3.plot(frequency[i], energy[i], color='g')
@@ -96,6 +95,7 @@ def plot_wave_energy_frequency():
                 ax1.set_xticks([3, 20, 40])
             elif i == 5:
                 ax1.set_xticks([50, 250, 500, 750, 1000])
+
 
         alpha = .15 if i==2 else .4
         ax1.grid(ls='--', alpha=alpha)
