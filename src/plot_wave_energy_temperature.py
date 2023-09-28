@@ -42,14 +42,13 @@ def plot_wave_energy_frequency():
 
     units = {'l': ['nm']*n,
              'e': ['eV']*n,
-             'f': ['THz']*n,
+             'f': ['cm-1']*n,
              'T': ['K']*n,
              't': ['fs']*n,
              }
     units['l'][-2:] = ['um']*2
     units['e'][-3]  = 'kcal'
     units['e'][-2:] = ['meV']*2
-    units['f'][-3:] = ['cm^-1']*3
     units['t'][0]   = 'as'
     units['t'][1]   = 'au'
 
@@ -90,14 +89,19 @@ def plot_wave_energy_frequency():
             ax3.set_xlabel('Time ('+units['t'][i]+')')
         else:
             ax3.plot(frequency[i], energy[i], color='g')
+            ax3.invert_xaxis()
             unit = 'cm$^{-1}$' if '-1' in units['f'][i] else units['f'][i]
             ax3.set_xlabel('Frequency ('+unit+')')
+            if i == 4:
+                ax1.set_xticks([3, 20, 40])
+            elif i == 5:
+                ax1.set_xticks([50, 250, 500, 750, 1000])
 
         alpha = .15 if i==2 else .4
         ax1.grid(ls='--', alpha=alpha)
 
         if i == 2:
-            hight = ax1.get_ylim()
+            hight = energy[i][0]
             for key, (v0, v1) in list(wave_names.items())[5:12]:
                 width = v1 - v0
                 ax1.bar(v0, hight, width, color=key, align='edge', alpha=.8)
